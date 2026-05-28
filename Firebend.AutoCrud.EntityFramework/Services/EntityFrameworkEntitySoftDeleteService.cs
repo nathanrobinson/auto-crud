@@ -1,7 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Firebend.AutoCrud.Core.Implementations;
-using Firebend.AutoCrud.Core.Interfaces.Caching;
 using Firebend.AutoCrud.Core.Interfaces.Models;
 using Firebend.AutoCrud.Core.Interfaces.Services.Entities;
 using Microsoft.AspNetCore.JsonPatch;
@@ -10,8 +9,7 @@ namespace Firebend.AutoCrud.EntityFramework.Services;
 
 public class EntityFrameworkEntitySoftDeleteService<TKey, TEntity>(
     IEntityUpdateService<TKey, TEntity> updateService,
-    ISessionTransactionManager transactionManager,
-    IEntityCacheService<TKey, TEntity> cacheService = null)
+    ISessionTransactionManager transactionManager)
     : BaseDisposable,
         IEntityDeleteService<TKey, TEntity>
     where TKey : struct
@@ -25,16 +23,11 @@ public class EntityFrameworkEntitySoftDeleteService<TKey, TEntity>(
 
         patch.Add(x => x.IsDeleted, true);
 
-        var deleted = await (entityTransaction != null
+        return await (entityTransaction != null
             ? updateService.PatchAsync(key, patch, entityTransaction, cancellationToken)
             : updateService.PatchAsync(key, patch, cancellationToken));
 
-        if (cacheService != null)
-        {
-            await cacheService.RemoveAsync(key, cancellationToken);
-        }
-
-        return deleted;
+        // cache invalidation not necessary since this is handled by the update service
     }
 
     public async Task<TEntity> DeleteAsync(TKey key, CancellationToken cancellationToken)
