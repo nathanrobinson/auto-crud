@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file. See [versio
 
 
 
+<a name="16.1.3"></a>
+## [16.1.3](https://www.github.com/firebend/auto-crud/releases/tag/v16.1.3) (2026-05-28)
+
+### Other
+
+* defer cache invalidation during transactions and add tenant-aware cache keys ([#434](https://www.github.com/firebend/auto-crud/issues/434)) ([951f5df](https://www.github.com/firebend/auto-crud/commit/951f5df0af86c8a1bc2ca7081cca1b344e0a4115))
+
 <a name="16.1.2"></a>
 ## [16.1.2](https://www.github.com/firebend/auto-crud/releases/tag/v16.1.2) (2026-02-05)
 
