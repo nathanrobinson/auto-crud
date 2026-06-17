@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file. See [versio
 
 
 
+<a name="16.1.4"></a>
+## [16.1.4](https://www.github.com/firebend/auto-crud/releases/tag/v16.1.4) (2026-06-17)
+
+### Other
+
+* ensure migrations are awaited conditionally in DbContextProvider ([#435](https://www.github.com/firebend/auto-crud/issues/435)) ([8f5bd22](https://www.github.com/firebend/auto-crud/commit/8f5bd226c667270a4a86e5fd67a321889feed1f9))
+
 <a name="16.1.3"></a>
 ## [16.1.3](https://www.github.com/firebend/auto-crud/releases/tag/v16.1.3) (2026-05-28)
 
