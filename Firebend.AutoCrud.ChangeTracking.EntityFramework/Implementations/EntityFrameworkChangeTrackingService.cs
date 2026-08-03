@@ -13,14 +13,15 @@ using Microsoft.AspNetCore.JsonPatch.Operations;
 
 namespace Firebend.AutoCrud.ChangeTracking.EntityFramework.Implementations;
 
-public class EntityFrameworkChangeTrackingService<TEntityKey, TEntity> :
-    EntityFrameworkCreateClient<Guid, ChangeTrackingEntity<TEntityKey, TEntity>>,
+public class EntityFrameworkChangeTrackingService<TEntityKey, TEntity, TChangeTrackingEntity> :
+    EntityFrameworkCreateClient<Guid, TChangeTrackingEntity>,
     IChangeTrackingService<TEntityKey, TEntity>
     where TEntityKey : struct
     where TEntity : class, IEntity<TEntityKey>
+    where TChangeTrackingEntity : ChangeTrackingEntity<TEntityKey, TEntity>, new()
 {
     public EntityFrameworkChangeTrackingService(
-        IChangeTrackingDbContextProvider<TEntityKey, TEntity> provider) :
+        IChangeTrackingDbContextProvider<TEntityKey, TEntity, TChangeTrackingEntity> provider) :
         base(provider, null, null)
     {
     }
@@ -50,13 +51,13 @@ public class EntityFrameworkChangeTrackingService<TEntityKey, TEntity> :
                 domainEvent.Operations),
             cancellationToken);
 
-    private static ChangeTrackingEntity<TEntityKey, TEntity> GetChangeTrackingEntityBase(DomainEventBase domainEvent,
+    private static TChangeTrackingEntity GetChangeTrackingEntityBase(DomainEventBase domainEvent,
         string action,
         TEntity entity,
         TEntityKey id,
         List<Operation<TEntity>> operations = null)
     {
-        var changeEntity = new ChangeTrackingEntity<TEntityKey, TEntity>
+        var changeEntity = new TChangeTrackingEntity
         {
             ModifiedDate = domainEvent.Time,
             Source = domainEvent.EventContext?.Source,
@@ -67,6 +68,11 @@ public class EntityFrameworkChangeTrackingService<TEntityKey, TEntity> :
             EntityId = id,
             DomainEventCustomContext = domainEvent.EventContext?.CustomContext
         };
+
+        if (changeEntity is IAuditContextProperties auditRow)
+        {
+            auditRow.PopulateFrom(domainEvent.EventContext);
+        }
 
         return changeEntity;
     }
