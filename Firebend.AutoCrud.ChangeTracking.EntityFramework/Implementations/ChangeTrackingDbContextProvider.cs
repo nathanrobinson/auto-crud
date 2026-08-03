@@ -15,17 +15,18 @@ using Microsoft.Extensions.Logging;
 
 namespace Firebend.AutoCrud.ChangeTracking.EntityFramework.Implementations;
 
-public class ChangeTrackingDbContextProvider<TEntityKey, TEntity>(
-    IDbContextFactory<ChangeTrackingDbContext<TEntityKey, TEntity>> contextFactory,
-    ILogger<ChangeTrackingDbContextProvider<TEntityKey, TEntity>> logger,
+public class ChangeTrackingDbContextProvider<TEntityKey, TEntity, TChangeTrackingEntity>(
+    IDbContextFactory<ChangeTrackingDbContext<TEntityKey, TEntity, TChangeTrackingEntity>> contextFactory,
+    ILogger<ChangeTrackingDbContextProvider<TEntityKey, TEntity, TChangeTrackingEntity>> logger,
     IChangeTrackingTableNameProvider<TEntityKey, TEntity> tableNameProvider,
     IDbContextConnectionStringProvider<TEntityKey, TEntity> connectionStringProvider = null)
     :
-        DbContextProvider<Guid, ChangeTrackingEntity<TEntityKey, TEntity>,
-            ChangeTrackingDbContext<TEntityKey, TEntity>>(contextFactory),
-        IChangeTrackingDbContextProvider<TEntityKey, TEntity>
+        DbContextProvider<Guid, TChangeTrackingEntity,
+            ChangeTrackingDbContext<TEntityKey, TEntity, TChangeTrackingEntity>>(contextFactory),
+        IChangeTrackingDbContextProvider<TEntityKey, TEntity, TChangeTrackingEntity>
     where TEntity : class, IEntity<TEntityKey>
     where TEntityKey : struct
+    where TChangeTrackingEntity : ChangeTrackingEntity<TEntityKey, TEntity>
 {
     private record ScaffoldCacheContext(DbContext DbContext, TableNameResult TableName, ILogger Logger);
 
@@ -60,7 +61,7 @@ public class ChangeTrackingDbContextProvider<TEntityKey, TEntity>(
 
     private static bool ScaffoldCacheFactory(string typeName, ScaffoldCacheContext scaffoldCacheContext)
     {
-        var changeTrackingType = typeof(ChangeTrackingEntity<TEntityKey, TEntity>);
+        var changeTrackingType = typeof(TChangeTrackingEntity);
 
         var schema = scaffoldCacheContext.TableName.Schema;
         var table = scaffoldCacheContext.TableName.Table;

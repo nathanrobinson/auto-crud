@@ -14,7 +14,11 @@ namespace Firebend.AutoCrud.ChangeTracking.EntityFramework.Interfaces;
 /// <typeparam name="TEntity">
 /// The type of entity.
 /// </typeparam>
-public interface IChangeTrackingDbContextProvider<TEntityKey, TEntity> :
-    IDbContextProvider<Guid, ChangeTrackingEntity<TEntityKey, TEntity>>
+/// <typeparam name="TChangeTrackingEntity">
+/// The type of row persisted for each change.
+/// </typeparam>
+public interface IChangeTrackingDbContextProvider<TEntityKey, TEntity, TChangeTrackingEntity> :
+    IDbContextProvider<Guid, TChangeTrackingEntity>
     where TEntityKey : struct
-    where TEntity : class, IEntity<TEntityKey>;
+    where TEntity : class, IEntity<TEntityKey>
+    where TChangeTrackingEntity : ChangeTrackingEntity<TEntityKey, TEntity>;
