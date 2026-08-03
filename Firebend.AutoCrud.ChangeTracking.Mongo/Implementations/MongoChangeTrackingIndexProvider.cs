@@ -8,16 +8,17 @@ using MongoDB.Driver;
 
 namespace Firebend.AutoCrud.ChangeTracking.Mongo.Implementations;
 
-public class MongoChangeTrackingIndexProvider<TEntityKey, TEntity> :
-    IMongoIndexProvider<Guid, ChangeTrackingEntity<TEntityKey, TEntity>>
+public class MongoChangeTrackingIndexProvider<TEntityKey, TEntity, TChangeTrackingEntity> :
+    IMongoIndexProvider<Guid, TChangeTrackingEntity>
     where TEntityKey : struct
     where TEntity : class, IEntity<TEntityKey>
+    where TChangeTrackingEntity : ChangeTrackingEntity<TEntityKey, TEntity>
 {
-    public IEnumerable<CreateIndexModel<ChangeTrackingEntity<TEntityKey, TEntity>>> GetIndexes(
-        IndexKeysDefinitionBuilder<ChangeTrackingEntity<TEntityKey, TEntity>> builder,
-        IMongoEntityIndexConfiguration<Guid, ChangeTrackingEntity<TEntityKey, TEntity>> configuration)
+    public IEnumerable<CreateIndexModel<TChangeTrackingEntity>> GetIndexes(
+        IndexKeysDefinitionBuilder<TChangeTrackingEntity> builder,
+        IMongoEntityIndexConfiguration<Guid, TChangeTrackingEntity> configuration)
     {
-        yield return new CreateIndexModel<ChangeTrackingEntity<TEntityKey, TEntity>>(
+        yield return new CreateIndexModel<TChangeTrackingEntity>(
             builder.Ascending(f => f.EntityId),
             new CreateIndexOptions { Name = "changeTrackingEntityId" });
 
