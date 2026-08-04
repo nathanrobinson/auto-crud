@@ -31,3 +31,32 @@ public class EntityFrameworkChangeTrackingSearchHandler<TKey, TEntity> : IEntity
         return query;
     }
 }
+
+/// <summary>
+/// Handles full text search for a custom <typeparamref name="TChangeTrackingEntity"/> change tracking row type.
+/// </summary>
+public class EntityFrameworkChangeTrackingSearchHandler<TKey, TEntity, TChangeTrackingEntity>
+    : IEntitySearchHandler<Guid, TChangeTrackingEntity, ChangeTrackingSearchRequest<TKey>>
+    where TEntity : class, IEntity<TKey>
+    where TKey : struct
+    where TChangeTrackingEntity : ChangeTrackingEntity<TKey, TEntity>
+{
+    public IQueryable<TChangeTrackingEntity> HandleSearch(IQueryable<TChangeTrackingEntity> query, ChangeTrackingSearchRequest<TKey> searchRequest)
+    {
+        if (string.IsNullOrWhiteSpace(searchRequest.Search))
+        {
+            return query;
+        }
+
+        if (!searchRequest.Search.Contains('%'))
+        {
+            searchRequest.Search = $"%{searchRequest.Search}%";
+        }
+
+        query = query.Where(x =>
+            EF.Functions.JsonContainsAny(x.Changes, searchRequest.Search) ||
+            EF.Functions.JsonContainsAny(x.Entity, searchRequest.Search));
+
+        return query;
+    }
+}
