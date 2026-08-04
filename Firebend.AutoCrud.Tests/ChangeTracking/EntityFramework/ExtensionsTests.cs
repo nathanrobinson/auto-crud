@@ -63,4 +63,26 @@ public class ExtensionsTests
         configurator.Builder.Registrations.Should().ContainKey(typeof(IChangeTrackingService<Guid, ExtensionsTestEntity>));
         configurator.Builder.Registrations.Should().NotContainKey(typeof(IChangeTrackingReadService<Guid, ExtensionsTestEntity>));
     }
+
+    [Test]
+    public void WithEfChangeTracking_CustomRowTypeOverload_RegistersTier2ReadService()
+    {
+        var configurator = BuildConfigurator();
+
+        configurator.WithEfChangeTracking<EntityFrameworkEntityBuilder<Guid, ExtensionsTestEntity>, Guid, ExtensionsTestEntity, ExtensionsCustomRow>();
+
+        configurator.Builder.Registrations.Should()
+            .ContainKey(typeof(IChangeTrackingReadService<Guid, ExtensionsTestEntity, ExtensionsCustomRow>));
+    }
+
+    [Test]
+    public void WithEfChangeTracking_DefaultOverload_RegistersTier2ReadServiceToo()
+    {
+        var configurator = BuildConfigurator();
+
+        configurator.WithEfChangeTracking();
+
+        configurator.Builder.Registrations.Should()
+            .ContainKey(typeof(IChangeTrackingReadService<Guid, ExtensionsTestEntity, ChangeTrackingEntity<Guid, ExtensionsTestEntity>>));
+    }
 }
