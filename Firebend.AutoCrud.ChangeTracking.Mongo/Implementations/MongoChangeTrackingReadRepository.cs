@@ -13,23 +13,52 @@ using MongoDB.Driver.Linq;
 
 namespace Firebend.AutoCrud.ChangeTracking.Mongo.Implementations;
 
+// A thin closure of the generic 3-arg version over the default row type, kept as its own named
+// class since it predates custom row types and is part of the public API.
 public class MongoChangeTrackingReadRepository<TEntityKey, TEntity> :
-    AbstractEntitySearchService<ChangeTrackingEntity<TEntityKey, TEntity>, ChangeTrackingSearchRequest<TEntityKey>>,
+    MongoChangeTrackingReadRepository<TEntityKey, TEntity, ChangeTrackingEntity<TEntityKey, TEntity>>,
     IChangeTrackingReadService<TEntityKey, TEntity>
     where TEntityKey : struct
     where TEntity : class, IEntity<TEntityKey>
 {
-    private readonly IMongoReadClient<Guid, ChangeTrackingEntity<TEntityKey, TEntity>> _queryClient;
-    private readonly IEntitySearchHandler<Guid, ChangeTrackingEntity<TEntityKey, TEntity>, ChangeTrackingSearchRequest<TEntityKey>> _searchHandler;
-
     public MongoChangeTrackingReadRepository(IMongoReadClient<Guid, ChangeTrackingEntity<TEntityKey, TEntity>> queryClient,
         IEntitySearchHandler<Guid, ChangeTrackingEntity<TEntityKey, TEntity>, ChangeTrackingSearchRequest<TEntityKey>> searchHandler)
+        : base(queryClient, searchHandler)
+    {
+    }
+}
+
+/// <summary>
+/// Encapsulates logic for reading change tracking events from a data store using Mongo,
+/// for a custom <typeparamref name="TChangeTrackingEntity"/> row type.
+/// </summary>
+/// <typeparam name="TEntityKey">
+/// The type of key the entity uses.
+/// </typeparam>
+/// <typeparam name="TEntity">
+/// The type of entity.
+/// </typeparam>
+/// <typeparam name="TChangeTrackingEntity">
+/// The type of row persisted for each change. Must inherit <see cref="ChangeTrackingEntity{TKey,TEntity}"/>.
+/// </typeparam>
+public class MongoChangeTrackingReadRepository<TEntityKey, TEntity, TChangeTrackingEntity> :
+    AbstractEntitySearchService<TChangeTrackingEntity, ChangeTrackingSearchRequest<TEntityKey>>,
+    IChangeTrackingReadService<TEntityKey, TEntity, TChangeTrackingEntity>
+    where TEntityKey : struct
+    where TEntity : class, IEntity<TEntityKey>
+    where TChangeTrackingEntity : ChangeTrackingEntity<TEntityKey, TEntity>
+{
+    private readonly IMongoReadClient<Guid, TChangeTrackingEntity> _queryClient;
+    private readonly IEntitySearchHandler<Guid, TChangeTrackingEntity, ChangeTrackingSearchRequest<TEntityKey>> _searchHandler;
+
+    public MongoChangeTrackingReadRepository(IMongoReadClient<Guid, TChangeTrackingEntity> queryClient,
+        IEntitySearchHandler<Guid, TChangeTrackingEntity, ChangeTrackingSearchRequest<TEntityKey>> searchHandler)
     {
         _queryClient = queryClient;
         _searchHandler = searchHandler;
     }
 
-    public async Task<EntityPagedResponse<ChangeTrackingEntity<TEntityKey, TEntity>>> GetChangesByEntityId(
+    public async Task<EntityPagedResponse<TChangeTrackingEntity>> GetChangesByEntityId(
         ChangeTrackingSearchRequest<TEntityKey> searchRequest,
         CancellationToken cancellationToken)
     {
@@ -38,13 +67,13 @@ public class MongoChangeTrackingReadRepository<TEntityKey, TEntity> :
             throw new ArgumentNullException(nameof(searchRequest));
         }
 
-        Func<IQueryable<ChangeTrackingEntity<TEntityKey, TEntity>>, Task<IQueryable<ChangeTrackingEntity<TEntityKey, TEntity>>>> firstStageFilter = null;
+        Func<IQueryable<TChangeTrackingEntity>, Task<IQueryable<TChangeTrackingEntity>>> firstStageFilter = null;
 
         if (!string.IsNullOrWhiteSpace(searchRequest.Search))
         {
             firstStageFilter = async x =>
-                (IQueryable<ChangeTrackingEntity<TEntityKey, TEntity>>)_searchHandler.HandleSearch(x, searchRequest)
-                    ?? (IQueryable<ChangeTrackingEntity<TEntityKey, TEntity>>)await _searchHandler
+                (IQueryable<TChangeTrackingEntity>)_searchHandler.HandleSearch(x, searchRequest)
+                    ?? (IQueryable<TChangeTrackingEntity>)await _searchHandler
                         .HandleSearchAsync(x, searchRequest);
         }
 

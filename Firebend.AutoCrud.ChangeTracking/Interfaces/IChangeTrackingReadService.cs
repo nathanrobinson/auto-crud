@@ -36,3 +36,38 @@ public interface IChangeTrackingReadService<TKey, TEntity>
     public Task<EntityPagedResponse<ChangeTrackingEntity<TKey, TEntity>>> GetChangesByEntityId(ChangeTrackingSearchRequest<TKey> searchRequest,
         CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// Encapsulates logic for reading change tracking events from a data store for a given entity,
+/// using a custom <typeparamref name="TChangeTrackingEntity"/> row type.
+/// </summary>
+/// <typeparam name="TKey">
+/// The type of key the entity uses.
+/// </typeparam>
+/// <typeparam name="TEntity">
+/// The type of entity.
+/// </typeparam>
+/// <typeparam name="TChangeTrackingEntity">
+/// The type of row persisted for each change. Must inherit <see cref="ChangeTrackingEntity{TKey,TEntity}"/>.
+/// </typeparam>
+public interface IChangeTrackingReadService<TKey, TEntity, TChangeTrackingEntity>
+    : IDisposable
+    where TKey : struct
+    where TEntity : class, IEntity<TKey>
+    where TChangeTrackingEntity : ChangeTrackingEntity<TKey, TEntity>
+{
+    /// <summary>
+    /// Gets a <see cref="EntityPagedResponse{TEntity}"/> containing a paged set of changes.
+    /// </summary>
+    /// <param name="searchRequest">
+    /// The <see cref="ChangeTrackingSearchRequest{TKey}"/> containing the parameters to search for changes by.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/>
+    /// </param>
+    /// <returns>
+    /// A <see cref="EntityPagedResponse{TEntity}"/> containing a paged list of <typeparamref name="TChangeTrackingEntity"/>
+    /// </returns>
+    public Task<EntityPagedResponse<TChangeTrackingEntity>> GetChangesByEntityId(ChangeTrackingSearchRequest<TKey> searchRequest,
+        CancellationToken cancellationToken);
+}

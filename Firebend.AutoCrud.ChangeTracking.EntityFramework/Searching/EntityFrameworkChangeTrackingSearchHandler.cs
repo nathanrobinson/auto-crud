@@ -8,11 +8,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Firebend.AutoCrud.ChangeTracking.EntityFramework.Searching;
 
-public class EntityFrameworkChangeTrackingSearchHandler<TKey, TEntity> : IEntitySearchHandler<Guid, ChangeTrackingEntity<TKey, TEntity>, ChangeTrackingSearchRequest<TKey>>
+// A thin closure of the generic 3-arg version over the default row type, kept as its own named
+// class since it predates custom row types and is part of the public API.
+public class EntityFrameworkChangeTrackingSearchHandler<TKey, TEntity>
+    : EntityFrameworkChangeTrackingSearchHandler<TKey, TEntity, ChangeTrackingEntity<TKey, TEntity>>
     where TEntity : class, IEntity<TKey>
     where TKey : struct
 {
-    public IQueryable<ChangeTrackingEntity<TKey, TEntity>> HandleSearch(IQueryable<ChangeTrackingEntity<TKey, TEntity>> query, ChangeTrackingSearchRequest<TKey> searchRequest)
+}
+
+/// <summary>
+/// Handles full text search for a custom <typeparamref name="TChangeTrackingEntity"/> change tracking row type.
+/// </summary>
+public class EntityFrameworkChangeTrackingSearchHandler<TKey, TEntity, TChangeTrackingEntity>
+    : IEntitySearchHandler<Guid, TChangeTrackingEntity, ChangeTrackingSearchRequest<TKey>>
+    where TEntity : class, IEntity<TKey>
+    where TKey : struct
+    where TChangeTrackingEntity : ChangeTrackingEntity<TKey, TEntity>
+{
+    public IQueryable<TChangeTrackingEntity> HandleSearch(IQueryable<TChangeTrackingEntity> query, ChangeTrackingSearchRequest<TKey> searchRequest)
     {
         if (string.IsNullOrWhiteSpace(searchRequest.Search))
         {

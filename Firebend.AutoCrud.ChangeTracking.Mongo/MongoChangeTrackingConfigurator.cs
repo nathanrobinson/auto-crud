@@ -10,35 +10,36 @@ using Firebend.AutoCrud.Mongo.Interfaces;
 
 namespace Firebend.AutoCrud.ChangeTracking.Mongo;
 
-public class MongoChangeTrackingConfigurator<TBuilder, TKey, TEntity> : EntityBuilderConfigurator<TBuilder, TKey, TEntity>
+public class MongoChangeTrackingConfigurator<TBuilder, TKey, TEntity, TChangeTrackingEntity> : EntityBuilderConfigurator<TBuilder, TKey, TEntity>
     where TBuilder : EntityCrudBuilder<TKey, TEntity>
     where TKey : struct
     where TEntity : class, IEntity<TKey>
+    where TChangeTrackingEntity : ChangeTrackingEntity<TKey, TEntity>
 {
     public MongoChangeTrackingConfigurator(TBuilder builder) : base(builder)
     {
     }
 
-    public MongoChangeTrackingConfigurator<TBuilder, TKey, TEntity> WithConnectionStringProvider<TConnectionStringProvider>()
-        where TConnectionStringProvider : class, IMongoConnectionStringProvider<Guid, ChangeTrackingEntity<TKey, TEntity>>
+    public MongoChangeTrackingConfigurator<TBuilder, TKey, TEntity, TChangeTrackingEntity> WithConnectionStringProvider<TConnectionStringProvider>()
+        where TConnectionStringProvider : class, IMongoConnectionStringProvider<Guid, TChangeTrackingEntity>
     {
-        Builder.WithRegistration<IMongoConnectionStringProvider<Guid, ChangeTrackingEntity<TKey, TEntity>>, TConnectionStringProvider>();
-        Builder.WithRegistration<IMongoClientFactory<Guid, ChangeTrackingEntity<TKey, TEntity>>,
-            MongoClientFactory<Guid, ChangeTrackingEntity<TKey, TEntity>>>();
-        Builder.WithRegistration<IMongoIndexMergeService<Guid, ChangeTrackingEntity<TKey, TEntity>>,
-            MongoIndexMergeService<Guid, ChangeTrackingEntity<TKey, TEntity>>>();
+        Builder.WithRegistration<IMongoConnectionStringProvider<Guid, TChangeTrackingEntity>, TConnectionStringProvider>();
+        Builder.WithRegistration<IMongoClientFactory<Guid, TChangeTrackingEntity>,
+            MongoClientFactory<Guid, TChangeTrackingEntity>>();
+        Builder.WithRegistration<IMongoIndexMergeService<Guid, TChangeTrackingEntity>,
+            MongoIndexMergeService<Guid, TChangeTrackingEntity>>();
 
         return this;
     }
 
-    public MongoChangeTrackingConfigurator<TBuilder, TKey, TEntity> WithConnectionString(string connectionString)
+    public MongoChangeTrackingConfigurator<TBuilder, TKey, TEntity, TChangeTrackingEntity> WithConnectionString(string connectionString)
     {
-        Builder.WithRegistrationInstance<IMongoConnectionStringProvider<Guid, ChangeTrackingEntity<TKey, TEntity>>>(
-            new StaticMongoConnectionStringProvider<Guid, ChangeTrackingEntity<TKey, TEntity>>(connectionString));
-        Builder.WithRegistration<IMongoClientFactory<Guid, ChangeTrackingEntity<TKey, TEntity>>,
-            MongoClientFactory<Guid, ChangeTrackingEntity<TKey, TEntity>>>();
-        Builder.WithRegistration<IMongoIndexMergeService<Guid, ChangeTrackingEntity<TKey, TEntity>>,
-            MongoIndexMergeService<Guid, ChangeTrackingEntity<TKey, TEntity>>>();
+        Builder.WithRegistrationInstance<IMongoConnectionStringProvider<Guid, TChangeTrackingEntity>>(
+            new StaticMongoConnectionStringProvider<Guid, TChangeTrackingEntity>(connectionString));
+        Builder.WithRegistration<IMongoClientFactory<Guid, TChangeTrackingEntity>,
+            MongoClientFactory<Guid, TChangeTrackingEntity>>();
+        Builder.WithRegistration<IMongoIndexMergeService<Guid, TChangeTrackingEntity>,
+            MongoIndexMergeService<Guid, TChangeTrackingEntity>>();
 
         return this;
     }

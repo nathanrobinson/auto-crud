@@ -14,7 +14,7 @@ var processId = Environment.ProcessId;
 Console.WriteLine($"Auto Crud Web Sample is running on process id {processId}");
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddUserSecrets("Firebend.AutoCrud");
+builder.Configuration.AddUserSecrets(typeof(Startup).Assembly);
 
 Startup.ConfigureServices(builder.Services, builder.Configuration);
 
