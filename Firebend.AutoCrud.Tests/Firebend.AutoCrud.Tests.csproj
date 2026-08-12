@@ -17,6 +17,7 @@
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.9" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
         <PackageReference Include="nunit" Version="4.4.0" />
         <PackageReference Include="NUnit3TestAdapter" Version="5.1.0" />
@@ -27,6 +28,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Firebend.AutoCrud.ChangeTracking.EntityFramework\Firebend.AutoCrud.ChangeTracking.EntityFramework.csproj" />
+      <ProjectReference Include="..\Firebend.AutoCrud.ChangeTracking.Mongo\Firebend.AutoCrud.ChangeTracking.Mongo.csproj" />
       <ProjectReference Include="..\Firebend.AutoCrud.ChangeTracking.Web\Firebend.AutoCrud.ChangeTracking.Web.csproj" />
       <ProjectReference Include="..\Firebend.AutoCrud.CustomFields.Web\Firebend.AutoCrud.CustomFields.Web.csproj" />
       <ProjectReference Include="..\Firebend.AutoCrud.EntityFramework\Firebend.AutoCrud.EntityFramework.csproj" />

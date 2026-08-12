@@ -21,23 +21,28 @@ namespace Firebend.AutoCrud.ChangeTracking.EntityFramework.DbContexts;
 /// <typeparam name="TEntity">
 /// The type of entity that is being tracked.
 /// </typeparam>
-public class ChangeTrackingDbContext<TKey, TEntity>(
-    DbContextOptions<ChangeTrackingDbContext<TKey, TEntity>> options,
+/// <typeparam name="TChangeTrackingEntity">
+/// The type of row persisted for each change. Defaults to <see cref="ChangeTrackingEntity{TKey,TEntity}"/>
+/// for every existing caller; a consumer may supply its own subclass to persist extra columns.
+/// </typeparam>
+public class ChangeTrackingDbContext<TKey, TEntity, TChangeTrackingEntity>(
+    DbContextOptions<ChangeTrackingDbContext<TKey, TEntity, TChangeTrackingEntity>> options,
     IChangeTrackingTableNameProvider<TKey, TEntity> tableNameProvider)
     : AbstractDbContext(options)
     where TKey : struct
     where TEntity : class, IEntity<TKey>
+    where TChangeTrackingEntity : ChangeTrackingEntity<TKey, TEntity>
 {
     /// <summary>
-    /// Gets or sets a value indicating the <see cref="DbSet{TEntity}"/> comprised of <see cref="ChangeTrackingEntity{TKey,TEntity}"/>.
+    /// Gets or sets a value indicating the <see cref="DbSet{TEntity}"/> comprised of <typeparamref name="TChangeTrackingEntity"/>.
     /// </summary>
-    public DbSet<ChangeTrackingEntity<TKey, TEntity>> Changes { get; set; }
+    public DbSet<TChangeTrackingEntity> Changes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<ChangeTrackingEntity<TKey, TEntity>>(changes =>
+        modelBuilder.Entity<TChangeTrackingEntity>(changes =>
         {
             var (tableName, schema) = tableNameProvider.GetTableName();
 
@@ -56,8 +61,8 @@ public class ChangeTrackingDbContext<TKey, TEntity>(
         });
     }
 
-    private static void MapJson<TProperty>(EntityTypeBuilder<ChangeTrackingEntity<TKey, TEntity>> changes,
-        Expression<Func<ChangeTrackingEntity<TKey, TEntity>, TProperty>> func)
+    private static void MapJson<TProperty>(EntityTypeBuilder<TChangeTrackingEntity> changes,
+        Expression<Func<TChangeTrackingEntity, TProperty>> func)
     {
         var settings =
             JsonPatch.JsonSerializationSettings.DefaultJsonSerializationSettings.Configure(

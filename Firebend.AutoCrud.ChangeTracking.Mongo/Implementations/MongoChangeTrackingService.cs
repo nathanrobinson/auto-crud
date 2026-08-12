@@ -13,15 +13,16 @@ using Microsoft.AspNetCore.JsonPatch.Operations;
 
 namespace Firebend.AutoCrud.ChangeTracking.Mongo.Implementations;
 
-public class MongoChangeTrackingService<TEntityKey, TEntity> :
+public class MongoChangeTrackingService<TEntityKey, TEntity, TChangeTrackingEntity> :
     BaseDisposable,
     IChangeTrackingService<TEntityKey, TEntity>
     where TEntity : class, IEntity<TEntityKey>
     where TEntityKey : struct
+    where TChangeTrackingEntity : ChangeTrackingEntity<TEntityKey, TEntity>, new()
 {
-    private readonly IMongoCreateClient<Guid, ChangeTrackingEntity<TEntityKey, TEntity>> _createClient;
+    private readonly IMongoCreateClient<Guid, TChangeTrackingEntity> _createClient;
 
-    public MongoChangeTrackingService(IMongoCreateClient<Guid, ChangeTrackingEntity<TEntityKey, TEntity>> createClient)
+    public MongoChangeTrackingService(IMongoCreateClient<Guid, TChangeTrackingEntity> createClient)
     {
         _createClient = createClient;
     }
@@ -51,13 +52,13 @@ public class MongoChangeTrackingService<TEntityKey, TEntity> :
                 domainEvent.Operations),
             cancellationToken);
 
-    private ChangeTrackingEntity<TEntityKey, TEntity> GetChangeTrackingEntityBase(DomainEventBase domainEvent,
+    private static TChangeTrackingEntity GetChangeTrackingEntityBase(DomainEventBase domainEvent,
         string action,
         TEntity entity,
         TEntityKey id,
         List<Operation<TEntity>> operations = null)
     {
-        var changeEntity = new ChangeTrackingEntity<TEntityKey, TEntity>
+        var changeEntity = new TChangeTrackingEntity
         {
             ModifiedDate = domainEvent.Time,
             Source = domainEvent.EventContext?.Source,
@@ -68,6 +69,11 @@ public class MongoChangeTrackingService<TEntityKey, TEntity> :
             EntityId = id,
             DomainEventCustomContext = domainEvent.EventContext?.CustomContext
         };
+
+        if (changeEntity is IAuditContextProperties auditRow)
+        {
+            auditRow.PopulateFrom(domainEvent.EventContext);
+        }
 
         return changeEntity;
     }

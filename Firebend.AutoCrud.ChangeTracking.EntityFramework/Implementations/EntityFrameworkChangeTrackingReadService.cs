@@ -12,23 +12,52 @@ using Firebend.AutoCrud.EntityFramework.Interfaces;
 
 namespace Firebend.AutoCrud.ChangeTracking.EntityFramework.Implementations;
 
+// A thin closure of the generic 3-arg version over the default row type, kept as its own named
+// class since it predates custom row types and is part of the public API.
 public class EntityFrameworkChangeTrackingReadService<TEntityKey, TEntity> :
-    AbstractEntitySearchService<ChangeTrackingEntity<TEntityKey, TEntity>, ChangeTrackingSearchRequest<TEntityKey>>,
+    EntityFrameworkChangeTrackingReadService<TEntityKey, TEntity, ChangeTrackingEntity<TEntityKey, TEntity>>,
     IChangeTrackingReadService<TEntityKey, TEntity>
     where TEntity : class, IEntity<TEntityKey>
     where TEntityKey : struct
 {
-    private readonly IEntityFrameworkQueryClient<Guid, ChangeTrackingEntity<TEntityKey, TEntity>> _queryClient;
-    private readonly IEntitySearchHandler<Guid, ChangeTrackingEntity<TEntityKey, TEntity>, ChangeTrackingSearchRequest<TEntityKey>> _searchHandler;
-
     public EntityFrameworkChangeTrackingReadService(IEntityFrameworkQueryClient<Guid, ChangeTrackingEntity<TEntityKey, TEntity>> queryClient,
         IEntitySearchHandler<Guid, ChangeTrackingEntity<TEntityKey, TEntity>, ChangeTrackingSearchRequest<TEntityKey>> searchHandler)
+        : base(queryClient, searchHandler)
+    {
+    }
+}
+
+/// <summary>
+/// Encapsulates logic for reading change tracking events from a data store using Entity Framework,
+/// for a custom <typeparamref name="TChangeTrackingEntity"/> row type.
+/// </summary>
+/// <typeparam name="TEntityKey">
+/// The type of key the entity uses.
+/// </typeparam>
+/// <typeparam name="TEntity">
+/// The type of entity.
+/// </typeparam>
+/// <typeparam name="TChangeTrackingEntity">
+/// The type of row persisted for each change. Must inherit <see cref="ChangeTrackingEntity{TKey,TEntity}"/>.
+/// </typeparam>
+public class EntityFrameworkChangeTrackingReadService<TEntityKey, TEntity, TChangeTrackingEntity> :
+    AbstractEntitySearchService<TChangeTrackingEntity, ChangeTrackingSearchRequest<TEntityKey>>,
+    IChangeTrackingReadService<TEntityKey, TEntity, TChangeTrackingEntity>
+    where TEntity : class, IEntity<TEntityKey>
+    where TEntityKey : struct
+    where TChangeTrackingEntity : ChangeTrackingEntity<TEntityKey, TEntity>
+{
+    private readonly IEntityFrameworkQueryClient<Guid, TChangeTrackingEntity> _queryClient;
+    private readonly IEntitySearchHandler<Guid, TChangeTrackingEntity, ChangeTrackingSearchRequest<TEntityKey>> _searchHandler;
+
+    public EntityFrameworkChangeTrackingReadService(IEntityFrameworkQueryClient<Guid, TChangeTrackingEntity> queryClient,
+        IEntitySearchHandler<Guid, TChangeTrackingEntity, ChangeTrackingSearchRequest<TEntityKey>> searchHandler)
     {
         _queryClient = queryClient;
         _searchHandler = searchHandler;
     }
 
-    public async Task<EntityPagedResponse<ChangeTrackingEntity<TEntityKey, TEntity>>> GetChangesByEntityId(
+    public async Task<EntityPagedResponse<TChangeTrackingEntity>> GetChangesByEntityId(
         ChangeTrackingSearchRequest<TEntityKey> searchRequest,
         CancellationToken cancellationToken)
     {
